@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#060912" />
+  <meta name="theme-color" content="#eaf6ff" />
   <title>Smart Flood Control Dashboard</title>
 
   <link rel="stylesheet" href="styles.css" />
@@ -14,123 +14,172 @@
 
 <body>
   <noscript>
-    <div style="padding:12px; font-family:Arial; background:#111; color:#fff;">
+    <div class="noscript">
       This dashboard requires JavaScript enabled.
     </div>
   </noscript>
 
-  <!-- App Shell -->
-  <div class="shell">
-    <!-- Topbar -->
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo" aria-hidden="true">🌊</div>
-        <div class="brand-text">
-          <div class="title">Smart Flood Control Dashboard</div>
-          <div class="subtitle">Real-time monitoring • Firebase live • Cross-platform</div>
+  <div class="page">
+    <!-- Decorative, no-image background shapes -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- Top Navigation -->
+    <header class="nav">
+      <div class="nav-left">
+        <div class="mark" aria-hidden="true">🌊</div>
+        <div class="nav-text">
+          <div class="nav-title">Smart Flood Control</div>
+          <div class="nav-sub">Realtime monitoring • Firebase • Cross-platform</div>
         </div>
       </div>
 
-      <div class="actions">
-        <button id="btnClearGraph" class="btn" type="button">Clear Graph</button>
+      <div class="nav-right">
+        <button id="btnClearGraph" class="btn btn-ghost" type="button">
+          Clear analytics
+        </button>
       </div>
     </header>
 
-    <!-- Two-column layout (no scrolling) -->
-    <main class="stage">
-      <!-- LEFT: Live status + readings -->
-      <section class="panel left">
-        <div class="card status-card">
+    <!-- Main One-Page Layout -->
+    <main class="layout">
+      <!-- LEFT: Live Status / Readings -->
+      <section class="stack">
+        <article class="card hero">
+          <div class="hero-top">
+            <div class="hero-title">
+              <div class="eyebrow">LIVE</div>
+              <h1>Flood Status</h1>
+              <p>Auto-updates from ESP32 → Firebase in real time.</p>
+            </div>
+
+            <div class="hero-badge">
+              <span id="badge" class="badge neutral">CONNECTING</span>
+              <div class="badge-sub">System state</div>
+            </div>
+          </div>
+
+          <div class="hero-grid">
+            <div class="tile tile-main">
+              <div class="tile-k">Current Level</div>
+              <div id="level" class="tile-v big">--</div>
+              <div class="tile-note">LV1 / LV2 sends alerts • LV3 raises barrier</div>
+            </div>
+
+            <div class="tile">
+              <div class="tile-k">Raw Sensor</div>
+              <div id="raw" class="tile-v">--</div>
+              <div class="tile-note">Analog reading</div>
+            </div>
+
+            <div class="tile">
+              <div class="tile-k">Barrier Angle</div>
+              <div id="angle" class="tile-v">--</div>
+              <div class="tile-note">0° default • 90° on LV3</div>
+            </div>
+
+            <div class="tile tile-wide">
+              <div class="tile-k">Last Update</div>
+              <div id="updated" class="tile-v">--</div>
+              <div class="tile-note">Latest sync time</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card mini-cards">
           <div class="card-head">
             <div>
-              <div class="card-title">Live Status</div>
-              <div class="hint">Auto-updates from ESP32 → Firebase</div>
-            </div>
-            <span id="badge" class="badge neutral">CONNECTING</span>
-          </div>
-
-          <div class="big-metric">
-            <div class="big-label">Level</div>
-            <div id="level" class="big-value">--</div>
-          </div>
-
-          <div class="split">
-            <div class="mini">
-              <div class="mini-k">Raw Sensor</div>
-              <div id="raw" class="mini-v">--</div>
-            </div>
-
-            <div class="mini">
-              <div class="mini-k">Barrier Angle</div>
-              <div id="angle" class="mini-v">--</div>
+              <div class="card-title">Outputs & Actions</div>
+              <div class="card-sub">What the system does automatically</div>
             </div>
           </div>
 
-          <div class="row">
-            <div class="row-k">Last Update</div>
-            <div id="updated" class="row-v">--</div>
+          <div class="pillset">
+            <div class="pill">📡 Firebase update</div>
+            <div class="pill">📈 Live analytics</div>
+            <div class="pill">📲 SMS alert (LV2/LV3)</div>
+            <div class="pill">🛡️ Barrier control (LV3)</div>
           </div>
-
-          <div class="divider"></div>
-
-          <div class="quick">
-            <div class="quick-title">Quick Notes</div>
-            <ul class="quick-list">
-              <li><b>LV2/LV3</b> triggers SMS (with 30-min cooldown).</li>
-              <li><b>LV3</b> activates barrier to <b>90°</b>.</li>
-              <li>Graph shows last <b><span id="pointsCount">60</span></b> readings.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="card compact">
-          <div class="card-head">
-            <div class="card-title">System Outputs</div>
-            <div class="hint">What the device does</div>
-          </div>
-
-          <div class="pill-grid">
-            <div class="pill">📡 Firebase Update</div>
-            <div class="pill">📈 Live Analytics</div>
-            <div class="pill">📲 SMS Alert (LV2/LV3)</div>
-            <div class="pill">🛡️ Barrier Control (LV3)</div>
-          </div>
-        </div>
+        </article>
       </section>
 
-      <!-- RIGHT: Analytics + guide -->
-      <section class="panel right">
-        <div class="card chart-card">
-          <div class="card-head">
+      <!-- RIGHT: Analytics + Thresholds -->
+      <section class="stack">
+        <article class="card chart">
+          <div class="card-head head-row">
             <div>
-              <div class="card-title">Live Analytics</div>
-              <div class="hint">Water Sensor (raw) • recent history</div>
+              <div class="card-title">Analytics</div>
+              <div class="card-sub">
+                Live sensor trend • last <b><span id="pointsCount">60</span></b> points
+              </div>
+            </div>
+
+            <div class="chip">
+              <span class="dotlive"></span>
+              Live feed
             </div>
           </div>
 
-          <!-- Fixed height to avoid scrolling -->
-          <div class="chart-wrap">
+          <div class="chart-frame">
             <canvas id="chart"></canvas>
           </div>
-        </div>
 
-        <div class="card">
+          <div class="chart-footer">
+            <div class="legend">
+              <span class="line"></span>
+              Water sensor (raw)
+            </div>
+            <div class="help">Tip: spikes usually mean sudden contact/submerge.</div>
+          </div>
+        </article>
+
+        <article class="card guide">
           <div class="card-head">
-            <div class="card-title">Threshold Guide</div>
-            <div class="hint">Based on your calibration</div>
+            <div>
+              <div class="card-title">Threshold Guide</div>
+              <div class="card-sub">Based on your calibration (850–2300 range)</div>
+            </div>
           </div>
 
-          <div class="guide">
-            <div class="guide-row"><span class="dot lv1"></span><b>LV1</b> 1100–1450: Warning water rising</div>
-            <div class="guide-row"><span class="dot lv2"></span><b>LV2</b> 1451–1850: Upcoming flood alert (SMS)</div>
-            <div class="guide-row"><span class="dot lv3"></span><b>LV3</b> 1851–2300: Flood alert (Barrier + SMS)</div>
-            <div class="guide-row"><span class="dot low"></span><b>LOW</b> &lt; 1100: Dry / low water</div>
-          </div>
-        </div>
+          <div class="guide-list">
+            <div class="guide-item">
+              <span class="gdot lv1"></span>
+              <div class="gtext">
+                <div class="gtitle">LV1 — Warning water rising</div>
+                <div class="gsub">1100–1450</div>
+              </div>
+            </div>
 
-        <footer class="footer">
-          <span>Tip: Open on mobile data to confirm global access.</span>
-          <span class="muted">GitHub Pages + Firebase RTDB</span>
+            <div class="guide-item">
+              <span class="gdot lv2"></span>
+              <div class="gtext">
+                <div class="gtitle">LV2 — Upcoming flood alert</div>
+                <div class="gsub">1451–1850 (SMS once, 30-min cooldown)</div>
+              </div>
+            </div>
+
+            <div class="guide-item">
+              <span class="gdot lv3"></span>
+              <div class="gtext">
+                <div class="gtitle">LV3 — Flood alert</div>
+                <div class="gsub">1851–2300 (Barrier ON + SMS once)</div>
+              </div>
+            </div>
+
+            <div class="guide-item subtle">
+              <span class="gdot low"></span>
+              <div class="gtext">
+                <div class="gtitle">LOW — Dry / low water</div>
+                <div class="gsub">&lt; 1100</div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <footer class="foot">
+          <span>Global access: GitHub Pages + Firebase RTDB</span>
+          <span class="muted">Open on mobile data to verify public availability.</span>
         </footer>
       </section>
     </main>
