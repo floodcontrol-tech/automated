@@ -1,16 +1,81 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Flood Dashboard</title>
+  <title>Flood Control Dashboard</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- Chart.js (for graphs) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <h1>Smart Flood Control Dashboard</h1>
-  <p><b>Raw:</b> <span id="raw">--</span></p>
-  <p><b>Level:</b> <span id="level">--</span></p>
-  <p><b>Barrier Angle:</b> <span id="angle">--</span></p>
-  <p><b>Device Uptime (ms):</b> <span id="uptime">--</span></p>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🌊</div>
+      <div>
+        <div class="title">Smart Flood Control Dashboard</div>
+        <div class="subtitle">Real-time monitoring • Cross-platform • Firebase live</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnClearGraph" class="btn">Clear Graph</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Status row -->
+    <section class="grid">
+      <div class="card status-card">
+        <div class="card-head">
+          <div class="card-title">Current Status</div>
+          <span id="badge" class="badge neutral">CONNECTING</span>
+        </div>
+
+        <div class="kv">
+          <div class="k">Level</div>
+          <div id="level" class="v">--</div>
+
+          <div class="k">Raw Sensor</div>
+          <div id="raw" class="v">--</div>
+
+          <div class="k">Barrier Angle</div>
+          <div id="angle" class="v">--</div>
+
+          <div class="k">Last Update</div>
+          <div id="updated" class="v">--</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Threshold Guide (Your Calibration)</div>
+        </div>
+        <div class="guide">
+          <div class="guide-row"><span class="dot lv1"></span><b>LV1</b> 1100–1450: Warning water rising</div>
+          <div class="guide-row"><span class="dot lv2"></span><b>LV2</b> 1451–1850: Upcoming flood alert (SMS)</div>
+          <div class="guide-row"><span class="dot lv3"></span><b>LV3</b> 1851–2300: Flood alert (Barrier + SMS)</div>
+          <div class="guide-row"><span class="dot low"></span><b>LOW</b> &lt; 1100: Dry / low water</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Graph -->
+    <section class="card chart-card">
+      <div class="card-head">
+        <div class="card-title">Live Analytics</div>
+        <div class="hint">Shows the last <span id="pointsCount">60</span> points (1 point per update)</div>
+      </div>
+      <canvas id="chart" height="120"></canvas>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>Tip: Open this on mobile data to verify it’s truly “global”.</span>
+      <span class="muted">Powered by GitHub Pages + Firebase Realtime Database</span>
+    </footer>
+  </main>
 
   <script type="module" src="./app.js"></script>
 </body>
