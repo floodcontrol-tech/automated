@@ -24,7 +24,7 @@ const badgeEl = document.getElementById("badge");
 const pointsCountEl = document.getElementById("pointsCount");
 
 // NEW: SMS status elements (inside hero card)
-const smsStatusEl = document.getElementById("smsStatus");
+const smsStatusEl = document.getElementById("smsStatusText");
 const smsNoteEl = document.getElementById("smsNote");
 
 // Chart
