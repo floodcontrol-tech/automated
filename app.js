@@ -15,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Required UI
+// UI elements
 const rawEl = document.getElementById("raw");
 const levelEl = document.getElementById("level");
 const angleEl = document.getElementById("angle");
@@ -23,9 +23,9 @@ const updatedEl = document.getElementById("updated");
 const badgeEl = document.getElementById("badge");
 const pointsCountEl = document.getElementById("pointsCount");
 
-// SMS UI (new)
-const smsTextEl = document.getElementById("smsText");
-const smsBoxEl = document.getElementById("smsStatus");
+// NEW: SMS status elements (inside hero card)
+const smsStatusEl = document.getElementById("smsStatus");
+const smsNoteEl = document.getElementById("smsNote");
 
 // Chart
 const chartCanvas = document.getElementById("chart");
@@ -49,6 +49,10 @@ function normalizeLevel(level) {
   return level || "--";
 }
 
+function isAlertLevel(level) {
+  return level === "LV2_UPCOMING_FLOOD" || level === "LV3_FLOOD_ALERT";
+}
+
 function setBadge(level) {
   if (!badgeEl) return;
   badgeEl.className = "badge neutral";
@@ -60,33 +64,45 @@ function setBadge(level) {
   else { badgeEl.textContent = "NORMAL / LOW"; badgeEl.classList.add("ok"); }
 }
 
-function setSmsStatus(level, data) {
-  // If ESP32 later writes smsStatus to Firebase, we honor it:
-  // e.g., data.smsStatus = "sending" | "sent" | "idle"
-  const custom = data?.smsStatus;
+// SMS UI state:
+// If ESP32 later writes d.smsStatus: "standby" | "sending" | "sent" | "failed"
+// we will display that. Otherwise we infer based on level transitions.
+let lastLevel = "--";
+let lastAlertShownAt = 0;
 
-  let text = "SMS: Idle";
-  let state = "idle"; // idle | sending | sent
+function setSmsUI(status, note) {
+  if (smsStatusEl) smsStatusEl.textContent = status;
+  if (smsNoteEl) smsNoteEl.textContent = note;
+}
 
-  if (custom) {
-    state = String(custom);
-    if (state === "sending") text = "SMS: Sending alert…";
-    else if (state === "sent") text = "SMS: Alert sent ✔";
-    else text = "SMS: Idle";
-  } else {
-    // No Firebase flag → infer based on level
-    if (level === "LV2_UPCOMING_FLOOD" || level === "LV3_FLOOD_ALERT") {
-      text = "SMS: Sending alert…";
-      state = "sending";
-    }
+function updateSmsStatus(level, d) {
+  // 1) If device provides explicit status, use it
+  const dev = d?.smsStatus;
+  if (dev) {
+    const s = String(dev).toLowerCase();
+    if (s === "sending") return setSmsUI("Sending alert…", "SIM800L is sending SMS");
+    if (s === "sent")    return setSmsUI("Alert sent ✔", "Message successfully sent");
+    if (s === "failed")  return setSmsUI("Failed ✖", "Check network/power/SIM load");
+    return setSmsUI("Standby", "Waiting for LV2/LV3");
   }
 
-  if (smsTextEl) smsTextEl.textContent = text;
+  // 2) Otherwise infer (best-effort):
+  // If we just entered LV2/LV3 from non-alert, show "Sending alert…" briefly, then "Standby"
+  const nowAlert = isAlertLevel(level);
+  const prevAlert = isAlertLevel(lastLevel);
 
-  if (smsBoxEl) {
-    smsBoxEl.classList.remove("idle", "sending", "sent");
-    smsBoxEl.classList.add(state);
+  if (nowAlert && (!prevAlert || level !== lastLevel)) {
+    lastAlertShownAt = Date.now();
+    return setSmsUI("Sending alert…", `Triggered at ${level}`);
   }
+
+  // Keep “Sending…” visible for 3 seconds, then revert
+  if (Date.now() - lastAlertShownAt < 3000) {
+    return; // keep current UI text
+  }
+
+  if (nowAlert) return setSmsUI("Standby", "Alert level active (waiting for next change)");
+  return setSmsUI("Standby", "Waiting for LV2/LV3");
 }
 
 function ensureChart() {
@@ -155,13 +171,12 @@ onValue(ref(db, "flood/latest"), (snap) => {
   safeSetText(rawEl, raw);
   safeSetText(levelEl, level);
   safeSetText(angleEl, angle);
-
-  setBadge(level);
   safeSetText(updatedEl, new Date().toLocaleString());
 
-  // SMS indicator (lower-left)
-  setSmsStatus(level, d);
+  setBadge(level);
+  updateSmsStatus(level, d);
 
-  // Chart
   if (raw !== "--") pushPoint(raw);
+
+  lastLevel = level;
 });
